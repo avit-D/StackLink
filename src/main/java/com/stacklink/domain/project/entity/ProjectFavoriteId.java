@@ -1,4 +1,4 @@
-package com.stacklink.entity;
+package com.stacklink.domain.project.entity;
 
 import jakarta.persistence.Embeddable;
 import lombok.*;
