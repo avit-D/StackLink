@@ -1,5 +1,6 @@
 package com.stacklink.domain.project.controller;
 
+import com.stacklink.auth.oauth2.PrincipalDetails;
 import com.stacklink.domain.project.dto.ApplyRequest;
 import com.stacklink.domain.project.dto.MyApplyResponse;
 import com.stacklink.domain.project.dto.ProjectApplyResponse;
@@ -36,6 +37,20 @@ public class ProjectApplyController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
 
+    }
+
+    // 공고 지원 취소
+    @DeleteMapping("/{projectId}/apply")
+    public ResponseEntity<String> cancelApply(@AuthenticationPrincipal PrincipalDetails principalDetails,
+                                              @PathVariable Long projectId) {
+        Long userId = principalDetails.getUser().getId();
+
+        try{
+            projectApplyService.cancelApply(userId, projectId);
+            return ResponseEntity.ok("지원 취소 완료");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     // 내가 지원한 공고 목록
