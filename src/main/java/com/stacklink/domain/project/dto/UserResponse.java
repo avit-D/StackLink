@@ -4,6 +4,8 @@ import com.stacklink.domain.project.entity.User;
 import lombok.Builder;
 import lombok.Getter;
 
+import java.util.Map;
+
 @Getter
 @Builder
 public class UserResponse {
@@ -19,8 +21,9 @@ public class UserResponse {
     private String role;
     private long followerCount;
     private long followingCount;
+    private Map<String, String> techStack; // { techName: careerDetail }
 
-    public static UserResponse of(User user, long followerCount, long followingCount) {
+    public static UserResponse of(User user, long followerCount, long followingCount, Map<String, String> techStack) {
         return UserResponse.builder()
                 .id(user.getId())
                 .username(user.getUsername())
@@ -31,6 +34,7 @@ public class UserResponse {
                 .role(user.getRole().name())
                 .followerCount(followerCount)
                 .followingCount(followingCount)
+                .techStack(techStack)
                 .build();
     }
 }
