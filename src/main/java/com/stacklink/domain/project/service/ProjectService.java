@@ -33,7 +33,6 @@ public class ProjectService {
         Project project = Project.builder()
                 .author(user)
                 .projectName(request.getProjectname())
-                .title(request.getTitle())
                 .content(request.getContent())
                 .recruitCount(request.getRecruitCount())
                 .deadlineAt(request.getDeadlineAt())
@@ -61,7 +60,6 @@ public class ProjectService {
                 .id(project.getId())
                 .userId(project.getAuthor().getId())
                 .projectname(project.getProjectName())
-                .title(project.getTitle())
                 .content(project.getContent())
                 .recruitCount(project.getRecruitCount())
                 .isClosed(project.isClosed())
@@ -89,7 +87,6 @@ public class ProjectService {
                 .orElseThrow(() -> new RuntimeException("공고 없음"));
 
         project.setProjectName(request.getProjectname());
-        project.setTitle(request.getTitle());
         project.setContent(request.getContent());
         project.setRecruitCount(request.getRecruitCount());
         project.setDeadlineAt(request.getDeadlineAt());
@@ -105,6 +102,25 @@ public class ProjectService {
 
         project.setDeleted(true);
         project.setUpdatedAt(LocalDateTime.now());
+    }
+
+    // 내가 올린 공고 목록
+    @Transactional(readOnly = true)
+    public List<ProjectResponse> getMyProjects(Long userId) {
+        return projectRepository.findByAuthor_IdAndIsDeletedFalse(userId)
+                .stream()
+                .map(p -> ProjectResponse.builder()
+                        .id(p.getId())
+                        .userId(p.getAuthor().getId())
+                        .projectname(p.getProjectName())
+                        .content(p.getContent())
+                        .recruitCount(p.getRecruitCount())
+                        .isClosed(p.isClosed())
+                        .viewCount(p.getViewCount())
+                        .favoriteCount(p.getFavoriteCount())
+                        .deadlineAt(p.getDeadlineAt())
+                        .build())
+                .toList();
     }
 
     // 핫한 공고 Top 5
