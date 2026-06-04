@@ -74,3 +74,23 @@ INSERT INTO project_apply (user_id, project_id, status, applied_at, content, pos
 (3, 1, '수락 대기중', NOW(), '프론트엔드 개발 경험을 살려 열심히 기여하겠습니다!', '프론트엔드'),
 -- 박지훈(id=4)이 project 1에 지원
 (4, 1, '수락 대기중', NOW(), '백엔드 경험을 바탕으로 열심히 하겠습니다.', '백엔드');
+
+-- ===== project_favorite (좋아요한 공고) =====
+-- 김민우(2)가 project 2, 3 좋아요
+-- 이수연(3)이 project 1, 3 좋아요
+-- 박지훈(4)이 project 1, 2 좋아요
+INSERT INTO project_favorite (user_id, project_id) VALUES
+(2, 2), (2, 3),
+(3, 1), (3, 3),
+(4, 1), (4, 2);
+
+-- ===== follow =====
+-- follow_id = 팔로우 당하는 사람, user_id = 팔로우 하는 사람
+-- 김민우(2) → 이수연(3), 박지훈(4) 팔로우
+-- 이수연(3) → 김민우(2) 팔로우
+-- 박지훈(4) → 이수연(3) 팔로우
+INSERT INTO follow (follow_id, user_id, created_at) VALUES
+(3, 2, NOW()), -- 김민우가 이수연 팔로우
+(4, 2, NOW()), -- 김민우가 박지훈 팔로우
+(2, 3, NOW()), -- 이수연이 김민우 팔로우
+(3, 4, NOW()); -- 박지훈이 이수연 팔로우
