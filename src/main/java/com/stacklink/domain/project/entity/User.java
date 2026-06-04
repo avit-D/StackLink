@@ -68,6 +68,21 @@ public class User {
         this.nickname = nickname;
     }
 
+    /** 회원정보 수정 */
+    public void updateProfile(String username, String nickname, String phoneNumber, String position) {
+        this.username = username;
+        this.nickname = nickname;
+        this.phoneNumber = phoneNumber;
+        this.position = position;
+        this.updatedAt = java.time.LocalDateTime.now();
+    }
+
+    /** 비밀번호 변경 */
+    public void updatePassword(String encodedPassword) {
+        this.password = encodedPassword;
+        this.updatedAt = java.time.LocalDateTime.now();
+    }
+
     /** 권한 변경 (관리자 기능용) */
     public void changeRole(Role role) {
         this.role = role;

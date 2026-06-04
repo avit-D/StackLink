@@ -9,4 +9,6 @@ import java.util.List;
 public interface TechUsersRepository extends JpaRepository<TechUsers, TechUsersId> {
 
     List<TechUsers> findByUser_Id(Long userId);
+
+    void deleteByUser_Id(Long userId);
 }

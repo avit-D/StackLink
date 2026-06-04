@@ -25,4 +25,11 @@ public class TechUsers {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "career_id")
     private Career career;
+
+    public TechUsers(User user, Tech tech, Career career) {
+        this.id = new TechUsersId(user.getId(), tech.getId());
+        this.user = user;
+        this.tech = tech;
+        this.career = career;
+    }
 }
