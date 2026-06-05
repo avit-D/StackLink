@@ -9,40 +9,63 @@ import ProjectContent from '../../components/project/ProjectContent';
 import ReplySection from '../../components/project/ReplySection';
 import TeamLeaderCard from '../../components/project/TeamLeaderCard';
 import HotProjects from '../../components/project/HotProjects';
-import { projects, members, currentUser, applicants } from '../../data/dummy';
-import { getTop5Projects } from '../../api/project';
+import { getProject, getTop5Projects, deleteProject } from '../../api/project';
+import { toggleFavorite, getMyFavorites } from '../../api/favorites';
+import { getUserProfile } from '../../api/user';
 
 const ProjectDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [project, setProject] = useState(null);
+  const [leader, setLeader] = useState(null);
   const [isLiked, setIsLiked] = useState(false);
   const [hotProjects, setHotProjects] = useState([]);
+  const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
     getTop5Projects().then((res) => setHotProjects(res.data));
-  }, []);
+    getProject(id)
+        .then((res) => {
+            setProject(res.data);
+            getUserProfile(res.data.userId)
+                .then((profileRes) => setLeader(profileRes.data))
+                .catch(() => {});
+        })
+        .catch(() => setNotFound(true));
 
-  const project = projects.find(p => p.id === Number(id));
-  if (!project) return <div className="flex items-center justify-center h-screen text-gray-500">존재하지 않는 공고입니다.</div>;
+    if (localStorage.getItem('accessToken')) {
+        getMyFavorites()
+            .then((res) => {
+                const liked = res.data.some((f) => f.id === Number(id));
+                setIsLiked(liked);
+            })
+            .catch(() => {});
+    }
+  }, [id]);
 
-  const leader = members.find(m => m.nickname === project.author) ?? members[0];
-  const applyCount = applicants.filter(a => a.projectId === project.id).length;
+  if (notFound) return <div className="flex items-center justify-center h-screen text-gray-500">존재하지 않는 공고입니다.</div>;
+  if (!project) return <div className="flex items-center justify-center h-screen text-gray-500">로딩 중...</div>;
 
-  // TODO: 백엔드 인증 연동 후 JWT에서 추출한 실제 유저 정보로 교체
-  const isOwner = currentUser.nickname === project.author;
+  const isOwner = localStorage.getItem('userId') === String(project.userId);
 
   const handleApply = () => {
     navigate(`/projects/${id}/apply`);
   };
 
   const handleDelete = () => {
-    // TODO: 백엔드 DELETE /api/projects/:id 연동 필요
-    console.log('공고 삭제:', id);
+    if (!window.confirm('공고를 삭제하시겠습니까?')) return;
+    deleteProject(id).then(() => navigate('/projects'));
   };
 
   const handleLike = () => {
-    // TODO: 백엔드 /api/projects/:id/favorite 연동 필요
-    setIsLiked((prev) => !prev);
+    toggleFavorite(id).then((res) => {
+      const liked = res.data.liked;
+      setIsLiked(liked);
+      setProject((prev) => ({
+        ...prev,
+        favoriteCount: liked ? prev.favoriteCount + 1 : prev.favoriteCount - 1,
+      }));
+    });
   };
 
   return (
@@ -64,7 +87,7 @@ const ProjectDetailPage = () => {
                 </button>
 
                 <div className="bg-white rounded-xl p-5 border border-gray-200">
-                  <ProjectInfo project={project} applyCount={applyCount} />
+                  <ProjectInfo project={project} applyCount={project.applyCount ?? 0} />
                 </div>
 
                 <ProjectContent project={project} />
@@ -80,6 +103,12 @@ const ProjectDetailPage = () => {
                       className="w-full bg-purple-600 text-white font-semibold py-3 rounded-xl hover:bg-purple-700 transition"
                     >
                       지원 관리
+                    </button>
+                    <button
+                      onClick={() => navigate(`/projects/${id}/edit`)}
+                      className="w-full bg-white text-purple-600 font-semibold py-3 rounded-xl border border-purple-300 hover:bg-purple-50 transition"
+                    >
+                      공고 수정
                     </button>
                     <button
                       onClick={handleDelete}
@@ -109,7 +138,7 @@ const ProjectDetailPage = () => {
                   </>
                 )}
 
-                <TeamLeaderCard leader={leader} />
+                {!isOwner && leader && <TeamLeaderCard leader={leader} />}
                 <HotProjects projects={hotProjects} />
               </div>
 

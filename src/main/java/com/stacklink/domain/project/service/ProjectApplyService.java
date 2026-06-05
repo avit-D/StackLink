@@ -9,6 +9,7 @@ import com.stacklink.domain.project.enums.ApplicationStatus;
 import com.stacklink.domain.project.repository.ProjectApplyRepository;
 import com.stacklink.domain.project.repository.ProjectMemberRepository;
 import com.stacklink.domain.project.repository.ProjectRepository;
+import com.stacklink.domain.project.repository.SubStateRepository;
 import com.stacklink.domain.project.repository.TechUsersRepository;
 import com.stacklink.domain.project.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,14 +27,16 @@ public class ProjectApplyService {
     private final UserRepository userRepository;
     // 유저별 기술스택 조회해서 반환해주기 위함
     private final TechUsersRepository techUsersRepository;
+    private final SubStateRepository subStateRepository;
 
     @Autowired
-    public ProjectApplyService(ProjectApplyRepository projectApplyRepository, ProjectRepository projectRepository, ProjectMemberRepository projectMemberRepository, UserRepository userRepository, TechUsersRepository techUsersRepository) {
+    public ProjectApplyService(ProjectApplyRepository projectApplyRepository, ProjectRepository projectRepository, ProjectMemberRepository projectMemberRepository, UserRepository userRepository, TechUsersRepository techUsersRepository, SubStateRepository subStateRepository) {
         this.projectApplyRepository = projectApplyRepository;
         this.projectRepository = projectRepository;
         this.projectMemberRepository = projectMemberRepository;
         this.userRepository = userRepository;
         this.techUsersRepository = techUsersRepository;
+        this.subStateRepository = subStateRepository;
     }
 
     // 공고 지원
@@ -41,6 +44,11 @@ public class ProjectApplyService {
     public void applyProject(Long userId, Long projectId, ApplyRequest req) {
         // 공고 존재 확인
         Project project = projectRepository.findById(projectId).orElseThrow(() -> new IllegalArgumentException("해당 공고가 존재하지 않습니다."));
+
+        // 본인 공고 지원 불가
+        if (project.getAuthor().getId().equals(userId)) {
+            throw new IllegalStateException("본인이 작성한 공고에는 지원할 수 없습니다.");
+        }
 
         // 현재 모집 중인지 확인
         if(project.isClosed()){
@@ -93,13 +101,21 @@ public class ProjectApplyService {
         return applies.stream()
                 .map(apply -> ProjectApplyResponse.from(
                         apply,
-                        techUsersRepository.findByUser_Id(apply.getId().getUserId())))
+                        techUsersRepository.findByUser_Id(apply.getId().getUserId()),
+                        subStateRepository.existsByUserIdAndSubStateTrue(apply.getId().getUserId())))
                 .toList();
     }
 
     // 지원자 거절 로직 추가함
     @Transactional
-    public void rejectApplicant(Long projectId, Long userId) {
+    public void rejectApplicant(Long loginUserId, Long projectId, Long userId) {
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new IllegalArgumentException("프로젝트가 없습니다."));
+
+        if (!project.getAuthor().getId().equals(loginUserId)) {
+            throw new IllegalStateException("작성자만 거절할 수 있습니다.");
+        }
+
         ProjectApplyId applyId = new ProjectApplyId(userId, projectId);
         ProjectApply apply = projectApplyRepository.findById(applyId)
                 .orElseThrow(() -> new IllegalArgumentException("지원 내역이 없습니다."));

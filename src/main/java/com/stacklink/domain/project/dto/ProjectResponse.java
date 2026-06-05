@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @Builder
@@ -32,6 +33,11 @@ public class ProjectResponse {
     private LocalDateTime deadlineAt;
 
     private LocalDateTime createdAt;
+
+    // !!!!! 기술 스택 담아야함 !!!!
+    private List<String> tags;
+
+    private Long applyCount;
 
     public static ProjectResponse from(Project p) {
         return ProjectResponse.builder()

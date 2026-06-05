@@ -22,9 +22,10 @@ public class ProjectController {
 
     @PostMapping
     public Long create(
-            @RequestParam Long userId,
+            Authentication authentication,
             @RequestBody ProjectCreateRequest request
     ) {
+        Long userId = Long.valueOf(authentication.getName());
         return projectService.createProject(userId, request);
     }
 
@@ -46,6 +47,18 @@ public class ProjectController {
             @RequestBody ProjectUpdateRequest request
     ) {
         projectService.updateProject(projectId, request);
+    }
+
+    // 프로젝트 마감
+    @PatchMapping("/{projectId}/close")
+    public ResponseEntity<String> close(Authentication authentication, @PathVariable Long projectId) {
+        Long userId = Long.valueOf(authentication.getName());
+        try {
+            projectService.closeProject(userId, projectId);
+            return ResponseEntity.ok("공고가 마감되었습니다.");
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(403).body(e.getMessage());
+        }
     }
 
     @DeleteMapping("/{projectId}")
