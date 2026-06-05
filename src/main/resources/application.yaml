@@ -77,6 +77,6 @@ logging:
 
 openai:
   api:
-    key: ${OPEN_AI_KEY}
+    key: ${OPENAI_API_KEY}
     url: https://api.openai.com/v1/chat/completions
     model: gpt-4o-mini
